@@ -7,7 +7,9 @@
   <title>Talentenmuur | Tussenstand</title>
 
   <style>
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     html, body {
       margin: 0;
@@ -24,8 +26,8 @@
       height: 100vh;
       background-image: url("achtergrond.png");
       background-position: center;
-      background-size: 100% 100%;
       background-repeat: no-repeat;
+      background-size: 100% 100%;
     }
 
     .bedrag {
@@ -47,25 +49,43 @@
   </main>
 
   <script>
+    const csvUrl =
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vQSpkm1A4G9MWbWt83zy-FDVsYveeA7ONkCzfNmPIOvP2W7EjDzPas9-9E4upCjctGajorZL7cnDNoQ/pub?gid=0&single=true&output=csv";
+
     async function updateTotaal() {
       try {
-        const response = await fetch(
-          "tussenstand.json?t=" + Date.now(),
-          { cache: "no-store" }
-        );
+        const url = csvUrl + "&t=" + Date.now();
+
+        const response = await fetch(url, {
+          cache: "no-store"
+        });
 
         if (!response.ok) {
-          throw new Error("Gegevens niet beschikbaar");
+          throw new Error("Google Sheets niet bereikbaar");
         }
 
-        const data = await response.json();
+        const csv = await response.text();
+        const regels = csv.trim().split(/\r?\n/);
+
+        // A1 = Totaal, A2 = het sponsorbedrag
+        const waarde = regels[1].split(",")[0]
+          .replace(/"/g, "")
+          .trim();
+
+        const bedrag = Number(
+          waarde.replace(/\./g, "").replace(",", ".")
+        );
+
+        if (!Number.isFinite(bedrag)) {
+          throw new Error("Ongeldig sponsorbedrag");
+        }
 
         document.getElementById("totaal").textContent =
           new Intl.NumberFormat("nl-NL", {
             style: "currency",
             currency: "EUR",
             maximumFractionDigits: 0
-          }).format(data.totaal);
+          }).format(bedrag);
 
       } catch (error) {
         console.error("Bijwerken mislukt:", error);
@@ -73,6 +93,8 @@
     }
 
     updateTotaal();
+
+    // Controleer elke minuut op wijzigingen
     setInterval(updateTotaal, 60000);
   </script>
 </body>
