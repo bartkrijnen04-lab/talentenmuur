@@ -1,0 +1,79 @@
+
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Talentenmuur | Tussenstand</title>
+
+  <style>
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #111;
+      font-family: Arial, sans-serif;
+    }
+
+    .scherm {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      background-image: url("achtergrond.png");
+      background-position: center;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+    }
+
+    .bedrag {
+      position: absolute;
+      top: 32%;
+      left: 0;
+      width: 100%;
+      text-align: center;
+      color: white;
+      font-size: clamp(48px, 8vw, 140px);
+      font-weight: 900;
+    }
+  </style>
+</head>
+
+<body>
+  <main class="scherm">
+    <div class="bedrag" id="totaal">€ 8.350</div>
+  </main>
+
+  <script>
+    async function updateTotaal() {
+      try {
+        const response = await fetch(
+          "tussenstand.json?t=" + Date.now(),
+          { cache: "no-store" }
+        );
+
+        if (!response.ok) {
+          throw new Error("Gegevens niet beschikbaar");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("totaal").textContent =
+          new Intl.NumberFormat("nl-NL", {
+            style: "currency",
+            currency: "EUR",
+            maximumFractionDigits: 0
+          }).format(data.totaal);
+
+      } catch (error) {
+        console.error("Bijwerken mislukt:", error);
+      }
+    }
+
+    updateTotaal();
+    setInterval(updateTotaal, 60000);
+  </script>
+</body>
+</html>
